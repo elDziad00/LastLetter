@@ -57,8 +57,24 @@ class LastLetterApp:
         clear_cache_button = tk.Button(main_frame, text="Clear cache", command=self.on_clear_cache)
         clear_cache_button.grid(row=3, column=1, sticky="we", pady=(0, 4), padx=(4, 0))
 
+        speed_label = tk.Label(main_frame, text="Typing speed (ms per char):")
+        speed_label.grid(row=4, column=0, columnspan=2, sticky="w", pady=(4, 0))
+
+        self.speed_var = tk.DoubleVar(value=30.0)
+        speed_scale = tk.Scale(
+            main_frame,
+            from_=10,
+            to=200,
+            orient="horizontal",
+            variable=self.speed_var,
+            showvalue=True,
+            length=200,
+            resolution=5,
+        )
+        speed_scale.grid(row=5, column=0, columnspan=2, sticky="we", pady=(0, 4))
+
         quit_button = tk.Button(main_frame, text="Quit", command=self.root.destroy)
-        quit_button.grid(row=4, column=0, columnspan=2, sticky="we", pady=(0, 4))
+        quit_button.grid(row=6, column=0, columnspan=2, sticky="we", pady=(0, 4))
 
         main_frame.grid_columnconfigure(0, weight=1)
         main_frame.grid_columnconfigure(1, weight=1)
@@ -118,9 +134,10 @@ class LastLetterApp:
     def _type_after_delay(self, completion: str) -> None:
         time.sleep(1.0)
         try:
+            delay = max(0.005, float(self.speed_var.get()) / 1000.0)
             for ch in completion:
                 keyboard.press_and_release(ch)
-                time.sleep(0.03)
+                time.sleep(delay)
             keyboard.send("enter")
         finally:
             self.root.after(0, self.root.deiconify)
