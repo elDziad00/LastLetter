@@ -1,6 +1,8 @@
 import threading
 import time
 import random
+import subprocess
+import ctypes
 
 import keyboard
 import tkinter as tk
@@ -51,7 +53,11 @@ class LastLetterApp:
 
         self.status_var = tk.StringVar(value="Loading word list...")
         status_label = tk.Label(main_frame, textvariable=self.status_var, fg="gray")
-        status_label.grid(row=2, column=0, columnspan=2, sticky="w", pady=(0, 6))
+        status_label.grid(row=2, column=0, sticky="w", pady=(0, 6))
+
+        self.roblox_status_var = tk.StringVar(value="Roblox not Found")
+        self.roblox_status_label = tk.Label(main_frame, textvariable=self.roblox_status_var, fg="red")
+        self.roblox_status_label.grid(row=2, column=1, sticky="e", pady=(0, 6))
 
         start_button = tk.Button(main_frame, text="Play round", command=self.on_play_round)
         start_button.grid(row=3, column=0, sticky="we", pady=(0, 4))
@@ -99,6 +105,7 @@ class LastLetterApp:
         self.root.bind("<FocusIn>", lambda event: self.entry.focus_set())
 
         threading.Thread(target=self.load_wordlist, daemon=True).start()
+        self.update_roblox_status()
 
     def load_wordlist(self) -> None:
         try:
@@ -142,6 +149,34 @@ class LastLetterApp:
         self.used_words.add(chosen)
         return chosen[len(prefix) :]
 
+    def _is_roblox_running(self) -> bool:
+        try:
+            output = subprocess.check_output(["tasklist"], text=True)
+        except Exception:
+            return False
+        return "RobloxPlayerBeta.exe" in output
+
+    def _focus_roblox_window(self) -> None:
+        try:
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            hwnd = user32.FindWindowW(None, "Roblox")
+            if hwnd:
+                if user32.IsIconic(hwnd):
+                    user32.ShowWindow(hwnd, 9)
+                user32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+
+    def update_roblox_status(self) -> None:
+        running = self._is_roblox_running()
+        if running:
+            self.roblox_status_var.set("Roblox Found")
+            self.roblox_status_label.config(fg="green")
+        else:
+            self.roblox_status_var.set("Roblox not Found")
+            self.roblox_status_label.config(fg="red")
+        self.root.after(2000, self.update_roblox_status)
+
     def on_clear_cache(self) -> None:
         self.used_words.clear()
 
@@ -162,6 +197,9 @@ class LastLetterApp:
 
         self.root.withdraw()
         self.prefix_var.set("")
+
+        if self._is_roblox_running():
+            self._focus_roblox_window()
 
         threading.Thread(target=self._type_after_delay, args=(completion,), daemon=True).start()
 
