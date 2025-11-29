@@ -3,9 +3,15 @@ import threading
 import tkinter as tk
 from tkinter import messagebox
 
+import webbrowser
+import requests
+from packaging import version
+
 from english_words import get_english_words_set
 
 import sys, os
+
+CURRENT_VERSION = "1.2.0"
 
 def resource_path(relative_path):
     try:
@@ -14,6 +20,25 @@ def resource_path(relative_path):
         base_path = os.path.dirname(__file__)
     return os.path.join(base_path, relative_path)
 
+def check_for_updates():
+    try:
+        response = requests.get(
+            "https://raw.githubusercontent.com/elDziad00/LastLetter/main/OBOversion.txt",
+            timeout=5
+        )
+        response.raise_for_status()
+        latest_version = response.text.strip()
+        
+        if version.parse(latest_version) > version.parse(CURRENT_VERSION):
+            if messagebox.askyesno(
+                "Update Available",
+                f"Version {latest_version} is available!\n"
+                f"You are currently using version {CURRENT_VERSION}.\n\n"
+                "Would you like to download the latest version?"
+            ):
+                webbrowser.open("https://github.com/elDziad00/LastLetter/releases/latest")
+    except Exception as e:
+        print(f"Error checking for updates: {e}")
 
 class OneByOneHelperApp:
     def __init__(self, root: tk.Tk) -> None:
@@ -136,6 +161,9 @@ class OneByOneHelperApp:
 def main() -> None:
     root = tk.Tk()
     app = OneByOneHelperApp(root)
+    
+    root.after(2000, check_for_updates)
+    
     root.mainloop()
 
 
