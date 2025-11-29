@@ -20,6 +20,7 @@ class OneByOneHelperApp:
         self.root = root
         self.root.title("One By One Helper")
         self.root.resizable(False, False)
+        self.root.attributes('-topmost', True)
 
         try:
             self.root.iconbitmap(resource_path("ONEBYONE.ico"))

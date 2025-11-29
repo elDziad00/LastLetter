@@ -25,6 +25,7 @@ class LastLetterApp:
         self.root = root
         self.root.title("Last Letter Helper")
         self.root.resizable(False, False)
+        self.root.attributes('-topmost', True)
 
         try:
             self.root.iconbitmap(resource_path("LastLetter.ico"))
